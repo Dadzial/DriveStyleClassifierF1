@@ -1,0 +1,4 @@
+.venv
+/src/metastore_db
+/src/spark-warehouse
+/src/derby.log
