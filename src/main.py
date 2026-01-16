@@ -43,6 +43,18 @@ def start_streaming_drive_data(session: SparkSession, watermarks: bool = True) -
 
     return query
 
+def agg_speed_rpm(df, window_sec=5):
+    df = df.withColumn("ts", F.to_timestamp("date"))
+    return df.groupBy(
+        "driver_number",
+        F.window("ts", f"{window_sec} seconds")
+    ).agg(
+        F.avg("speed").alias("avg_speed"),
+        F.avg("rpm").alias("avg_rpm"),
+        (F.max("speed") - F.min("speed")).alias("delta_speed"),
+        (F.max("rpm") - F.min("rpm")).alias("delta_rpm")
+    )
+
 
 if __name__ == "__main__":
 
