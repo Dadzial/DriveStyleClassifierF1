@@ -4,7 +4,7 @@ from pyspark.sql.connect.streaming.query import StreamingQuery
 from stream import F1DataSource
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
-
+import time
 
 os.environ['JAVA_HOME'] = '/usr/lib/jvm/java-21-openjdk-amd64'
 findspark.init("/opt/spark")
@@ -55,6 +55,25 @@ def agg_speed_rpm(df, window_sec=5):
         (F.max("rpm") - F.min("rpm")).alias("delta_rpm")
     )
 
+def agg_throttle_brake(df, window_sec=5):
+    df = df.withColumn("ts", F.to_timestamp("date"))
+    return df.groupBy(
+        "driver_number",
+        F.window("ts", f"{window_sec} seconds")
+    ).agg(
+        F.avg("throttle").alias("avg_throttle"),
+        F.avg("brake").alias("avg_brake")
+    )
+
+def agg_gear_drs(df, window_sec=5):
+    df = df.withColumn("ts", F.to_timestamp("date"))
+    return df.groupBy(
+        "driver_number",
+        F.window("ts", f"{window_sec} seconds")
+    ).agg(
+        F.max("n_gear").alias("max_gear"),
+        F.sum("drs").alias("sum_drs")
+    )
 
 if __name__ == "__main__":
 
@@ -65,4 +84,5 @@ if __name__ == "__main__":
     print("Startowanie streamu...")
     active_query = start_streaming_drive_data(session)
 
-    active_query.awaitTermination()
+    time.sleep(60)
+    active_query.stop()
