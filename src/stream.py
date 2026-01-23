@@ -8,14 +8,13 @@ class F1StreamReader(DataSourceStreamReader):
     def __init__(self, schema, options):
         self._schema = schema
         self._options = options
-        self.records_per_batch = 10
+        self.records_per_batch = 50
         self.current_off = 0
 
     def initialOffset(self) -> dict:
         return {"offset": 0}
 
     def latestOffset(self) -> dict:
-
         self.current_off += self.records_per_batch
         return {"offset": self.current_off}
 
@@ -30,12 +29,10 @@ class F1StreamReader(DataSourceStreamReader):
         try:
             response = requests.get(url, timeout=10)
             data = response.json()
-
             idx = partition.value
 
             if isinstance(data, list) and idx < len(data):
                 record = data[idx]
-
                 yield (
                     record.get('brake'),
                     record.get('date'),
